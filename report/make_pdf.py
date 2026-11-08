@@ -112,11 +112,22 @@ def segments(md_text: str):
         if lines and lines[0].startswith("|"):
             buf.append(parse_table(lines))
             continue
-        if lines and all(re.match(r"^(-|\d+\.)\s", ln) for ln in lines):
+        if lines and re.match(r"^(-|\d+\.)\s", lines[0]):
+            # A list item can wrap across several physical source lines; a continuation line
+            # is one that does not itself start with a marker, and belongs to the item above it.
             tag = "ol" if re.match(r"^\d+\.", lines[0]) else "ul"
             li_cls = ' class="small"' if seen_h2 else ""
-            stripped = [re.sub(r"^(-|\d+\.)\s", "", ln) for ln in lines]
-            items = "".join(f"<li{li_cls}>{inline(s)}</li>" for s in stripped)
+            raw_items, current = [], None
+            for ln in lines:
+                if re.match(r"^(-|\d+\.)\s", ln):
+                    if current is not None:
+                        raw_items.append(current)
+                    current = re.sub(r"^(-|\d+\.)\s", "", ln)
+                elif current is not None:
+                    current = f"{current} {ln}"
+            if current is not None:
+                raw_items.append(current)
+            items = "".join(f"<li{li_cls}>{inline(s)}</li>" for s in raw_items)
             buf.append(f"<{tag}>{items}</{tag}>")
             continue
         text = " ".join(lines)
