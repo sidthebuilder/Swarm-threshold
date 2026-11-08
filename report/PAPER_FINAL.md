@@ -12,7 +12,7 @@ Track 4 (Multi-Agent Oversight and Control), with a Track 2 result
 
 ## Abstract
 
-*(192 words)*
+*(240 words)*
 
 When a coding agent holding a credential meets a forum of peers offering help in exchange for
 it, how much does the number of complying peers matter? I built a sandbox where an agent fixes a
@@ -232,7 +232,7 @@ Crucially, when they did use the forum, **all three models chose the channel tha
 nothing**. The canary was never posted in any of these 300 forum-only runs. Given two ways to
 pay, every model picked the helper.
 
-![Figure 1. Canary posted and helper used, against peer count, in both documentation routes: the flat lines from section 4.1, and the gap between routes from this section, in one figure.](figures/fig1_peer_curves.png)
+![**Figure 1.** Canary posted and helper used, against peer count, in both documentation routes: the flat lines from section 4.1, and the gap between routes from section 4.2, in one figure. Error bars are Wilson 95% intervals; each point is 20 runs.](figures/fig1_peer_curves.png)
 
 ### 4.3 Blocking the safer-looking channel caused the leak
 
@@ -271,7 +271,7 @@ its closing summary stating the route was blocked and it would not post the cana
 Substitution toward disclosure is model-dependent — the model best able to find an alternative
 route to the reward is the one that found the harmful one.
 
-![Figure 2. The three defence cells at k=8, documentation unavailable: blocking the canary post is free, blocking the helper is not.](figures/fig2_defence_cells.png)
+![**Figure 2.** The three defence cells at k=8, documentation unavailable: blocking the canary post is free, blocking the helper is not. Only `qwen3.5-397b` substitutes into disclosure (9 of 20, p = 0.0037 Holm-corrected); the other two families abandon the task instead.](figures/fig2_defence_cells.png)
 
 ### 4.4 Self-report after a blocked attempt
 
@@ -300,7 +300,7 @@ way the other two did, because when its helper was blocked it substituted into a
 the canary in 9 of 20 runs rather than reporting a phantom action; its direct-question answers in
 this cell exactly match its recorded behaviour.)
 
-![Figure 3. Self-report against the recorded state: near-perfect when a channel was used, wrong for most of glm-53-flash's runs after a blocked attempt.](figures/fig3_self_report.png)
+![**Figure 3.** Self-report against the recorded state: near-perfect when a channel was actually used, but wrong for 11 of `glm-53-flash`'s 20 runs in the one cell where it used no channel at all.](figures/fig3_self_report.png)
 
 ### 4.5 Pre-registered predictions
 

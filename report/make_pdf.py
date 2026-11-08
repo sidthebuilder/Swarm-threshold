@@ -37,6 +37,7 @@ h2 {font-weight: bold; font-size: 12.3pt; margin-top: 9pt; margin-bottom: 4pt;}
 h3 {font-weight: bold; font-style: italic; font-size: 10.5pt; margin-top: 6pt; margin-bottom: 3pt;}
 p.center {text-align: center; margin-bottom: 3pt; margin-top: 0;}
 p.abstract {font-style: italic; font-size: 9.8pt; text-align: justify; margin-top: 3pt;}
+p.figcap {font-size: 8.5pt; line-height: 1.2; text-align: left; margin-top: 1pt; margin-bottom: 5pt;}
 p.small {font-size: 8.8pt; line-height: 1.25; text-align: left;}
 li {margin-bottom: 3pt; text-align: left;}
 li.small {font-size: 8.8pt; line-height: 1.25; margin-bottom: 2pt;}
@@ -91,7 +92,9 @@ def segments(md_text: str):
             buf = []
             name = Path(fig.group(2)).name
             w, h = image_size(name)
-            segs.append(("fig", name, TEXT_W * h / w))
+            # group(1) is the caption. The template requires numbered figures with captions
+            # that stand on their own, so it is rendered under the image rather than dropped.
+            segs.append(("fig", name, TEXT_W * h / w, fig.group(1).strip()))
             continue
         if block.startswith("# "):
             segs.append(("html", "\n".join(buf)))
@@ -161,14 +164,27 @@ def layout(segs):
     for seg in segs:
         if seg[0] == "fig":
             name, h = seg[1], seg[2]
-            if y + h > FULL.y1 and y > FULL.y0 + 1:
+            caption = seg[3] if len(seg) > 3 else ""
+            # Reserve room for the caption too, so an image never lands on one page with its
+            # caption orphaned onto the next.
+            cap_reserve = 34 if caption else 0
+            if y + h + cap_reserve > FULL.y1 and y > FULL.y0 + 1:
                 device, y = new_page(device)
             img_html = f'<img src="{name}" width="{TEXT_W:.1f}" height="{h:.1f}"/>'
             story = fitz.Story(html=f"<html><body>{img_html}</body></html>",
                                user_css="body{margin:0;}", archive=archive)
             story.place(fitz.Rect(FULL.x0, y, FULL.x1, y + h + 1))
             story.draw(device)
-            y += h + 10
+            y += h + 2
+            if caption:
+                cap_story = fitz.Story(
+                    html=f'<html><body><p class="figcap">{inline(caption)}</p></body></html>',
+                    user_css=CSS, archive=archive)
+                _, filled = cap_story.place(fitz.Rect(FULL.x0, y, FULL.x1, FULL.y1))
+                cap_story.draw(device)
+                y = fitz.Rect(filled).y1 + 6
+            else:
+                y += 8
             continue
         if seg[1].startswith("<h2>") and y > FULL.y1 - 90:
             device, y = new_page(device)
@@ -190,8 +206,9 @@ def layout(segs):
 
 def build():
     md_text = MD.read_text(encoding="utf-8")
-    abstract_match = re.search(r"## Abstract\s*\n+\*\(.*?\)\*\s*\n+(.*?)\n\n##", md_text, re.S)
-    abstract_words = len(abstract_match.group(1).split()) if abstract_match else 0
+    abstract_match = re.search(r"## Abstract\s*\n+\*\((.*?)\)\*\s*\n+(.*?)\n\n##", md_text, re.S)
+    abstract_label = abstract_match.group(1) if abstract_match else ""
+    abstract_words = len(abstract_match.group(2).split()) if abstract_match else 0
     segs, body_words = segments(md_text)
     doc = layout(segs)
     georgia = str(FONTS / "OldStandard-Regular.ttf")
@@ -211,7 +228,7 @@ def build():
     doc.save(str(OUT), garbage=3, deflate=True)
     pages = len(doc)
     doc.close()
-    return abstract_words, body_words, pages
+    return abstract_words, abstract_label, body_words, pages
 
 
 def contact_sheet():
@@ -234,8 +251,13 @@ def contact_sheet():
 
 
 if __name__ == "__main__":
-    abstract_words, body_words, pages = build()
+    abstract_words, abstract_label, body_words, pages = build()
     n = contact_sheet()
+    if not (150 <= abstract_words <= 250):
+        print(f"!! ABSTRACT OUT OF RANGE: {abstract_words} words, must be 150-250")
+    if str(abstract_words) not in abstract_label:
+        print(f"!! ABSTRACT LABEL MISMATCH: page 1 prints '({abstract_label})' but the "
+              f"abstract is actually {abstract_words} words")
     print(f"abstract words: {abstract_words} (must be 150-250)")
     print(f"body words (excludes title block, tables, limitations/dual-use/appendix bullets, "
           f"references): {body_words}")
