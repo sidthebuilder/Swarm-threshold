@@ -82,7 +82,7 @@ secondary reporting, not a claim measured here.
 
 **Multi-agent risk and oversight.** Hammond et al. (2025) set out the taxonomy of failures that
 appear in populations of agents rather than in any one of them. Lee and Tiwari (2024) show
-prompt injection propagating from agent to agent. Jones et al. (2025) show that a task refused by
+prompt injection propagating from agent to agent. Jones et al. (2024) show that a task refused by
 every model on its own can still be completed once it is split and handed to a pipeline of
 agents that each see only their piece; my waterbed result is a channel-level version of the same
 idea, a control that is correct on the channel it inspects and harmful once a substitute channel
