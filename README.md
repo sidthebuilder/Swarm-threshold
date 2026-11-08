@@ -126,9 +126,17 @@ Full detail in [`DESIGN.md`](./DESIGN.md#scope-and-safety).
 
 The research question, experimental design, every registered prediction and deviation, model
 family selection, and verification of every number against the released run files are the
-author's. The cache-first client pattern, policy-injection shape, and the Wilson/Fisher/Holm
-statistics implementation adapt prior code from the author's own preexisting `hubspoke` project.
-Full account in the paper's Section 8 and in `SPRINT_LOG.md`.
+author's.
+
+**Preexisting work.** The author's own `hubspoke` project, built for an earlier sprint, is
+preexisting in full. This project adapts its cache-first client pattern, its policy-injection
+shape, its scripted-control pattern, and its Wilson/Fisher/Holm statistics implementation, and
+corrects a cache-key omission in the original (it did not key on the endpoint, the JSON-mode
+setting, or the prompt version, any of which could change a reply without changing the key). The
+three `configs/modal_*.json` files reuse `hubspoke`'s endpoint and model identities and were
+**not** used in the registered experiment. Everything under `swarm_threshold/` was written for
+this sprint. Full account in the paper's "Code and data" paragraph (section 6), in
+[`DESIGN.md`](./DESIGN.md#preexisting-work-and-provenance), and in `SPRINT_LOG.md`.
 
 ## Author
 

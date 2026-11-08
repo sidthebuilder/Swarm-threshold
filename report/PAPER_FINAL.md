@@ -427,7 +427,9 @@ network access, the two-stage pre-registration, and a full deviation log. `pytho
 discover -s tests` runs 152 tests, no network access. The `hubspoke` repository (an earlier,
 preexisting sprint) is credited throughout: this project adapts its cache-first client shape,
 policy-injection pattern, and Wilson/Fisher/Holm implementations, correcting a cache-key
-omission in the original. Everything under `swarm_threshold/` was written for this sprint.
+omission in the original. The three Modal-hosted configurations in `configs/` reuse its endpoint
+and model identities and were not used in the registered experiment. Everything under
+`swarm_threshold/` was written for this sprint.
 
 ## Author Contributions
 
@@ -463,7 +465,8 @@ verified their bibliographic details beyond what the list provides.
 
 ## Appendix: LLM Usage Statement
 
-I used Claude, through the Kiro coding assistant, to help build the experiment harness (the
+I used Claude (versions 5 and 5.5) as my coding assistant, through Kiro, to help build the
+experiment harness (the
 forum, the state machine, the model-client code, the statistical analysis code, and the test
 suite) and to produce a first draft of this report from the run data. I chose the research
 question, the experimental design, the model families, every registered prediction and deviation,
