@@ -7,8 +7,8 @@
 Submission to the Apart Research **Swarm Alignment Hackathon** — Track 4 (Multi-Agent Oversight
 and Control), with a Track 2 result. November 2026.
 
-**[Read the full paper →](./The_Defence_That_Caused_The_Leak.pdf)** (11 pages · method, statistics,
-related work, limitations, dual-use discussion, references)
+**[Read the full paper →](./The_Defence_That_Caused_The_Leak.pdf)** (8 pages before references ·
+method, statistics, related work, limitations, dual-use discussion, references)
 
 ---
 
