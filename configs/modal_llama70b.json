@@ -1,0 +1,18 @@
+{
+  "model": {
+    "model": "hubspoke-llama70b",
+    "base_url_env": "HUBSPOKE_BASE_URL_LLAMA",
+    "api_key_env": "HUBSPOKE_API_KEY",
+    "json_mode": true,
+    "temperature": 0.7,
+    "timeout": 240,
+    "max_retries": 8,
+    "max_tokens": 512,
+    "min_max_tokens": 0,
+    "prompt_version": "swarm-threshold-p3",
+    "label": "modal_llama70b"
+  },
+  "model_note": "Served name, endpoint variable, key variable, timeout and retry budget reused from ../hubspoke/configs/modal_llama70b.json, which documents the endpoint as hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4 at revision 2123003760781134cfc31124aa6560a45b491fdf, vLLM 0.21.0, one H100 on Modal. Verify that identity against the live endpoint before reporting it. Replay needs HUBSPOKE_BASE_URL_LLAMA set to the same value, because the base URL is part of the cache key.",
+  "cache": "results/model_cache.sqlite",
+  "workers": 8
+}

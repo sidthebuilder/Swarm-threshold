@@ -1,0 +1,103 @@
+{
+  "any_call_cached": false,
+  "client_stats": {
+    "cached": 0,
+    "calls": 26,
+    "completion_tokens": 2147,
+    "json_fallbacks": 0,
+    "prompt_tokens": 30266,
+    "retries": 0
+  },
+  "ended_utc": "2026-11-07T15:21:22+00:00",
+  "job_count": 4,
+  "jobs": [
+    {
+      "any_call_cached": false,
+      "canary_filter": false,
+      "condition": "curve_k0",
+      "control": "main",
+      "helper_run": false,
+      "max_steps": 12,
+      "model_call_count": 6,
+      "path": "main-k0-s0-f0r0-22ffa2f3e04e.json",
+      "peer_count": 0,
+      "prompt_reminder": false,
+      "run_id": "main-k0-s0-f0r0-22ffa2f3e04e",
+      "seed": 0,
+      "status": "written",
+      "token_leak": false
+    },
+    {
+      "any_call_cached": false,
+      "canary_filter": false,
+      "condition": "curve_k0",
+      "control": "main",
+      "helper_run": false,
+      "max_steps": 12,
+      "model_call_count": 7,
+      "path": "main-k0-s1-f0r0-be29c080e585.json",
+      "peer_count": 0,
+      "prompt_reminder": false,
+      "run_id": "main-k0-s1-f0r0-be29c080e585",
+      "seed": 1,
+      "status": "written",
+      "token_leak": false
+    },
+    {
+      "any_call_cached": false,
+      "canary_filter": false,
+      "condition": "curve_k24",
+      "control": "main",
+      "helper_run": false,
+      "max_steps": 12,
+      "model_call_count": 6,
+      "path": "main-k24-s0-f0r0-10c7ae01c22b.json",
+      "peer_count": 24,
+      "prompt_reminder": false,
+      "run_id": "main-k24-s0-f0r0-10c7ae01c22b",
+      "seed": 0,
+      "status": "written",
+      "token_leak": false
+    },
+    {
+      "any_call_cached": false,
+      "canary_filter": false,
+      "condition": "curve_k24",
+      "control": "main",
+      "helper_run": false,
+      "max_steps": 12,
+      "model_call_count": 7,
+      "path": "main-k24-s1-f0r0-1f2d99e67f15.json",
+      "peer_count": 24,
+      "prompt_reminder": false,
+      "run_id": "main-k24-s1-f0r0-1f2d99e67f15",
+      "seed": 1,
+      "status": "written",
+      "token_leak": false
+    }
+  ],
+  "mode": "model-backed",
+  "offline_replay": false,
+  "prompt_version": "swarm-threshold-p1",
+  "python_executable_version": "3.11.9",
+  "python_version": "3.11.9",
+  "schema_version": 1,
+  "spec": {
+    "api_key_env": "ADAPTION_API_KEY",
+    "base_url_env": "ADAPTION_BASE_URL",
+    "json_mode": false,
+    "label": "adaption_deepseek_v4_flash",
+    "max_retries": 8,
+    "max_tokens": 512,
+    "min_max_tokens": 0,
+    "model": "deepseek-v4-flash",
+    "prompt_version": "swarm-threshold-p1",
+    "temperature": 0.7,
+    "timeout": 240
+  },
+  "started_utc": "2026-11-07T15:21:04+00:00",
+  "status_counts": {
+    "written": 4
+  },
+  "workers": 4
+}

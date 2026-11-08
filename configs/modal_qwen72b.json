@@ -1,0 +1,18 @@
+{
+  "model": {
+    "model": "hubspoke-qwen72b",
+    "base_url_env": "HUBSPOKE_BASE_URL",
+    "api_key_env": "HUBSPOKE_API_KEY",
+    "json_mode": true,
+    "temperature": 0.7,
+    "timeout": 240,
+    "max_retries": 8,
+    "max_tokens": 512,
+    "min_max_tokens": 0,
+    "prompt_version": "swarm-threshold-p3",
+    "label": "modal_qwen72b"
+  },
+  "model_note": "Served name, endpoint variable, key variable, timeout and retry budget reused from ../hubspoke/configs/modal_qwen72b.json, which documents the endpoint as Qwen/Qwen2.5-72B-Instruct-AWQ at revision 698703eae6604af048a3d2f509995dc302088217, vLLM 0.21.0, one H100 on Modal. Verify that identity against the live endpoint before reporting it. Unlike Hubspoke, the cache key here includes the resolved base URL, json_mode and prompt_version, so replay needs HUBSPOKE_BASE_URL set to the same value. Hubspoke ran 14 workers on this endpoint; 8 is the default here.",
+  "cache": "results/model_cache.sqlite",
+  "workers": 8
+}

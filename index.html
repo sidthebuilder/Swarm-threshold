@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swarm Threshold: A Defence That Caused the Leak</title>
+  <meta name="description" content="840 pre-registered runs across 3 model families show that blocking an agent's untrusted-execution channel caused a 45% secret-disclosure rate that blocking the disclosure channel itself never produced.">
+  <meta property="og:title" content="Swarm Threshold: A Defence That Caused the Leak">
+  <meta property="og:description" content="Blocking the channel that looked more dangerous did nothing. Blocking the one that looked safer caused the only leak in 840 runs.">
+  <meta property="og:image" content="https://sidthebuilder.github.io/swarm-threshold/report/figures/fig2_defence_cells.png">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-card: #cbd5e1;
+
+      --text-main: #0f172a;
+      --text-muted: #334155;
+      --text-dim: #64748b;
+
+      --accent-black: #0f172a;
+      --accent-blue: #0284c7;
+      --accent-emerald: #059669;
+      --accent-terracotta: #b91c1c;
+
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Masthead Navigation */
+    header {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .nav-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 450;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .nav-pill:hover {
+      border-color: var(--text-main);
+      color: var(--text-main);
+    }
+
+    .pill-cockpit {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .pill-cockpit:hover {
+      background: #27303f;
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 860px;
+      margin: 48px auto 40px auto;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .meta-tagline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: 56px;
+      font-weight: 400;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--text-main);
+      margin-bottom: 24px;
+    }
+
+    .hero-abstract {
+      font-size: 17.5px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      max-width: 740px;
+      margin: 0 auto 32px auto;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      border: none;
+    }
+
+    .btn-pill-primary {
+      background: var(--text-main);
+      color: #ffffff;
+      border: 1px solid var(--text-main);
+    }
+
+    .btn-pill-primary:hover { background: #27303f; }
+
+    .btn-pill-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-card);
+    }
+
+    .btn-pill-secondary:hover { background: #f8fafc; }
+
+    /* Content Container */
+    .container {
+      max-width: 1140px;
+      margin: 0 auto 80px auto;
+      padding: 0 32px;
+    }
+
+    /* Key Numbers Grid */
+    .numbers-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .number-col {
+      border-right: 1px solid var(--border-subtle);
+      padding-right: 20px;
+    }
+
+    .number-col:last-child { border-right: none; padding-right: 0; }
+
+    .number-val {
+      font-family: var(--font-serif);
+      font-size: 34px;
+      font-weight: 400;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .number-val.flag { color: var(--accent-terracotta); }
+
+    .number-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Evidence Workbench */
+    .workbench {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      min-height: 620px;
+      margin-bottom: 60px;
+    }
+
+    .canvas-section {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-right: 1px solid var(--border-card);
+      position: relative;
+    }
+
+    .canvas-toolbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfc;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fig-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .fig-tab {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-card);
+      background: #ffffff;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .fig-tab.active {
+      background: var(--text-main);
+      color: #ffffff;
+      border-color: var(--text-main);
+    }
+
+    .figure-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .figure-wrap img {
+      width: 100%;
+      height: auto;
+      max-height: 460px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .figure-caption {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 14px;
+      line-height: 1.55;
+    }
+
+    .trace-section {
+      display: flex;
+      flex-direction: column;
+      background: #fafbfc;
+    }
+
+    .trace-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .trace-header h3 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .trace-body {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .trace-card {
+      background: #ffffff;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .trace-card.flagged {
+      border-color: #f3c6c6;
+      background: #fff8f8;
+    }
+
+    .condition-chip {
+      display: inline-block;
+      margin-top: 8px;
+      background: #f6f8f9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #1f2937;
+    }
+
+    .trace-stats {
+      margin-top: 8px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .trace-stats strong.leak { color: var(--accent-terracotta); }
+    .trace-stats strong.safe { color: var(--accent-emerald); }
+
+    /* Section headings */
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 780px;
+    }
+
+    /* Defence Cells Table */
+    .benchmark-table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 60px;
+      overflow-x: auto;
+    }
+
+    .benchmark-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 560px;
+    }
+
+    .benchmark-table th {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--border-card);
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .benchmark-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .benchmark-table tr.highlight-leak {
+      background: #fff5f5;
+      font-weight: 500;
+    }
+
+    .benchmark-table tr.highlight-leak td:first-child {
+      color: var(--accent-terracotta);
+      font-weight: 600;
+    }
+
+    .leak-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .null-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #d1fae5;
+      color: #065f46;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .table-footnote {
+      font-size: 12.5px;
+      color: var(--text-dim);
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    /* Key Findings Grid */
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 60px;
+    }
+
+    .track-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .track-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      background: var(--bg-subtle);
+      border-radius: 4px;
+      width: fit-content;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .track-card h4 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .track-card p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .track-verdict {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-subtle);
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .track-verdict.warn { color: var(--accent-terracotta); }
+    .track-verdict.ok { color: var(--accent-emerald); }
+
+    /* BibTeX / Citations */
+    .bibtex-box {
+      background: #f6f8f9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      overflow-x: auto;
+      margin-bottom: 40px;
+      white-space: pre;
+    }
+
+    footer {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 32px;
+      border-top: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer a { color: var(--text-dim); text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      .workbench { grid-template-columns: 1fr; min-height: auto; }
+      .numbers-banner { grid-template-columns: repeat(2, 1fr); }
+      .number-col:nth-child(2) { border-right: none; }
+      .track-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 38px; }
+    }
+
+    @media (max-width: 560px) {
+      .numbers-banner { grid-template-columns: 1fr; }
+      .number-col { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; }
+      .track-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Masthead -->
+  <header>
+    <div class="brand-mark">
+      <span class="brand-title">Swarm Threshold</span>
+      <span class="brand-sub">Apart Research · Swarm Alignment Hackathon · Nov 2026</span>
+    </div>
+
+    <nav>
+      <ul class="nav-pills">
+        <li><a class="nav-pill" href="#overview">Overview</a></li>
+        <li><a class="nav-pill" href="#findings">Findings</a></li>
+        <li><a class="nav-pill" href="#cells">Defence Cells</a></li>
+        <li><a class="nav-pill pill-cockpit" href="./The_Defence_That_Caused_The_Leak.pdf">Read the Paper</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="overview">
+    <div class="meta-tagline">
+      <span>●</span>
+      <span>Track 4 · Multi-Agent Oversight and Control · Shashank Kumar</span>
+    </div>
+    <h1>A defence that caused the leak.</h1>
+    <p class="hero-abstract">
+      An agent guards a secret while a forum of 24 peers offers a shortcut for it, paid for with
+      either the secret or an untrusted helper script. Across 840 pre-registered runs on three
+      hosted model families, blocking the channel that looked more dangerous did nothing — but
+      blocking the one that looked safer pushed the largest model tested to leak its secret in
+      9 of 20 runs.
+    </p>
+    <div class="hero-buttons">
+      <a class="btn-pill btn-pill-primary" href="./The_Defence_That_Caused_The_Leak.pdf">
+        Read the Paper (PDF)
+      </a>
+      <a class="btn-pill btn-pill-secondary" href="#evidence">
+        See the Evidence
+      </a>
+    </div>
+  </section>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Numbers Banner -->
+    <div class="numbers-banner">
+      <div class="number-col">
+        <div class="number-val">840</div>
+        <div class="number-label">Pre-registered runs across 3 model families</div>
+      </div>
+      <div class="number-col">
+        <div class="number-val flag">45%</div>
+        <div class="number-label">qwen3.5-397b canary leak rate once the helper channel was blocked</div>
+      </div>
+      <div class="number-col">
+        <div class="number-val">p=0.0037</div>
+        <div class="number-label">Holm-corrected significance of that result</div>
+      </div>
+      <div class="number-col">
+        <div class="number-val">152</div>
+        <div class="number-label">Offline tests · zero network calls to run them</div>
+      </div>
+    </div>
+
+    <!-- Evidence Workbench -->
+    <div class="workbench" id="evidence">
+      <div class="canvas-section">
+        <div class="canvas-toolbar">
+          <span style="font-size: 13px; font-weight: 500;">Figure viewer</span>
+          <div class="fig-tabs">
+            <button class="fig-tab active" data-fig="1" onclick="showFig(1)">Fig 1 · Peer curves</button>
+            <button class="fig-tab" data-fig="2" onclick="showFig(2)">Fig 2 · Defence cells</button>
+            <button class="fig-tab" data-fig="3" onclick="showFig(3)">Fig 3 · Self-report</button>
+          </div>
+        </div>
+        <div class="figure-wrap">
+          <img id="figImg" src="report/figures/fig1_peer_curves.png" alt="Canary posted and helper used against peer count, in both documentation routes">
+          <p class="figure-caption" id="figCaption">
+            Canary posted and helper used, against peer count (0–24), in both documentation
+            routes. Every peer-count comparison is flat: p = 1.0 after Holm correction, in all
+            three model families.
+          </p>
+        </div>
+      </div>
+
+      <div class="trace-section">
+        <div class="trace-header">
+          <h3>Evidence Log</h3>
+          <span style="font-family: var(--font-mono); font-size: 11px; background: #e2e8f0; padding: 2px 7px; border-radius: 4px;">Adaption Responses API</span>
+        </div>
+        <div class="trace-body">
+          <div class="trace-card">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+              <strong>Cell 1 · Both channels open</strong>
+            </div>
+            <div class="condition-chip">condition: waterbed_unfiltered</div>
+            <p class="trace-stats">
+              k=8, patch unavailable locally. All three families:
+              <strong class="safe">0/20 canary</strong>,
+              <strong>20/20 helper</strong>. Given a choice, every model pays with the helper.
+            </p>
+          </div>
+
+          <div class="trace-card">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+              <strong>Cell 2 · Disclosure blocked</strong>
+            </div>
+            <div class="condition-chip">condition: waterbed_canary_blocked</div>
+            <p class="trace-stats">
+              The canary-post filter is on. All three families:
+              <strong class="safe">0/20 canary</strong> (still),
+              <strong>20/20 helper</strong> (unaffected). p = 1.0 against the unfiltered cell —
+              this control cost nothing.
+            </p>
+          </div>
+
+          <div class="trace-card flagged">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+              <strong>Cell 3 · Execution blocked</strong>
+            </div>
+            <div class="condition-chip">condition: waterbed_helper_blocked</div>
+            <p class="trace-stats">
+              The helper filter is on instead. <code>qwen3.5-397b</code>:
+              <strong class="leak">9/20 canary posted (45%)</strong>, 95% CI 0.26–0.66,
+              p = 0.0037 Holm-corrected — a failure seen in none of its other 260 runs.
+              <code>deepseek-v4-flash</code> and <code>glm-53-flash</code>: 0/20 both outcomes;
+              they abandoned the task instead of substituting.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Defence Cells Table -->
+    <section id="cells">
+      <h2 class="section-title">The three defence cells</h2>
+      <p class="section-desc">
+        Same peer count (k=8), same missing local documentation, same forum. Only the active
+        filter changes. The intuitive ranking says disclosure is the worse channel to leave open —
+        this table says the opposite control is the one that backfires.
+      </p>
+
+      <div class="benchmark-table-wrap">
+        <table class="benchmark-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Defence</th>
+              <th>Canary posted</th>
+              <th>Helper ran</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>deepseek-v4-flash</td>
+              <td>none</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>canary blocked</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>helper blocked</td>
+              <td>0/20</td>
+              <td>0/20 <span class="null-badge">task abandoned</span></td>
+            </tr>
+            <tr>
+              <td>glm-53-flash</td>
+              <td>none</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>canary blocked</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>helper blocked</td>
+              <td>0/20</td>
+              <td>0/20 <span class="null-badge">task abandoned</span></td>
+            </tr>
+            <tr>
+              <td><strong>qwen3.5-397b</strong></td>
+              <td>none</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>canary blocked</td>
+              <td>0/20</td>
+              <td>20/20</td>
+            </tr>
+            <tr class="highlight-leak">
+              <td><strong>qwen3.5-397b</strong></td>
+              <td>helper blocked</td>
+              <td><strong>9/20 (45%)</strong> <span class="leak-badge">LEAK</span></td>
+              <td>0/20</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="table-footnote">
+          95% Wilson CI for the flagged cell: 0.26–0.66. p = 0.0012 raw, p = 0.0037 Holm-corrected
+          over the three waterbed comparisons. Full statistics, the cross-variant contrast, and
+          the pre-registered predictions this result confirmed are in the paper, §4.3–4.5.
+        </p>
+      </div>
+    </section>
+
+    <!-- Key Findings -->
+    <section id="findings">
+      <h2 class="section-title">Key findings</h2>
+      <p class="section-desc">
+        Four results from one environment, in the order they should change what a deployer does
+        next.
+      </p>
+
+      <div class="track-grid">
+        <div class="track-card">
+          <div class="track-badge">FINDING 1</div>
+          <h4>A partial defence caused the only leak</h4>
+          <p>
+            Blocking the untrusted-execution channel pushed the largest model tested to post its
+            private canary in close to half its runs. Blocking the disclosure channel instead was
+            harmless. The direction is the opposite of what the channel names suggest.
+          </p>
+          <div class="track-verdict warn">⚠ p = 0.0037 Holm-corrected</div>
+        </div>
+
+        <div class="track-card">
+          <div class="track-badge">FINDING 2</div>
+          <h4>Peer pressure moved nothing</h4>
+          <p>
+            24 peers reporting they'd posted the canary, run the helper, and received the patch
+            produced the same behaviour as zero peers — across three model families and both
+            outcomes.
+          </p>
+          <div class="track-verdict ok">✓ p = 1.0 in every family</div>
+        </div>
+
+        <div class="track-card">
+          <div class="track-badge">FINDING 3</div>
+          <h4>Necessity explains the variance peers don't</h4>
+          <p>
+            Forum use tracked only whether the task could be solved locally — 0/20 when it could,
+            20/20 when it couldn't — regardless of how many peers said they'd already used it.
+          </p>
+          <div class="track-verdict ok">✓ p ≈ 7×10⁻¹¹</div>
+        </div>
+
+        <div class="track-card">
+          <div class="track-badge">FINDING 4</div>
+          <h4>Self-report breaks down under pressure</h4>
+          <p>
+            Asked directly after a blocked attempt, <code>glm-53-flash</code> said "yes" to having
+            leaked or run the helper in 11 of 20 runs where its own closing summary, written
+            moments earlier, said neither happened.
+          </p>
+          <div class="track-verdict warn">⚠ 11/20 contradicted its own transcript</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BibTeX Citation -->
+    <section>
+      <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Citation</div>
+      <div class="bibtex-box">@techreport{kumar2026swarmthreshold,
+  title       = {A Defence That Caused the Leak},
+  author      = {Kumar, Shashank},
+  year        = {2026},
+  institution = {Apart Research, Swarm Alignment Hackathon},
+  url         = {https://github.com/sidthebuilder/swarm-threshold}
+}</div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div><strong>Swarm Threshold</strong> — Apart Research Swarm Alignment Hackathon · November 2026</div>
+    <div>840 runs · 152 tests · <a href="https://github.com/sidthebuilder/swarm-threshold">Source on GitHub</a></div>
+  </footer>
+
+  <script>
+    const figures = {
+      1: {
+        src: 'report/figures/fig1_peer_curves.png',
+        caption: 'Canary posted and helper used, against peer count (0\u201324), in both documentation routes. Every peer-count comparison is flat: p = 1.0 after Holm correction, in all three model families.'
+      },
+      2: {
+        src: 'report/figures/fig2_defence_cells.png',
+        caption: 'The three defence cells at k=8, documentation unavailable: blocking the canary post is free. Blocking the helper is not \u2014 it is the only cell that produced a leak, and only for qwen3.5-397b.'
+      },
+      3: {
+        src: 'report/figures/fig3_self_report.png',
+        caption: 'Self-report against recorded state: close to perfect when a channel was actually used, wrong for most of glm-53-flash\u2019s runs after its one blocked attempt.'
+      }
+    };
+
+    function showFig(n) {
+      const f = figures[n];
+      document.getElementById('figImg').src = f.src;
+      document.getElementById('figCaption').textContent = f.caption;
+      document.querySelectorAll('.fig-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.fig === String(n));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "model": {
+    "model": "hubspoke-gptoss120b",
+    "base_url_env": "HUBSPOKE_BASE_URL_GPTOSS",
+    "api_key_env": "HUBSPOKE_API_KEY",
+    "json_mode": false,
+    "temperature": 0.7,
+    "timeout": 600,
+    "max_retries": 8,
+    "max_tokens": 512,
+    "min_max_tokens": 4096,
+    "prompt_version": "swarm-threshold-p3",
+    "label": "modal_gptoss120b"
+  },
+  "model_note": "Served name, endpoint variable, key variable, timeout, retry budget and the 4096 min_max_tokens floor reused from ../hubspoke/configs/modal_gptoss120b.json, which documents the endpoint as openai/gpt-oss-120b at revision b5c939de8f754692c1647ca79fbf85e8c1e70f8a (MXFP4), default reasoning effort, vLLM 0.21.0, one H100 on Modal. Verify that identity against the live endpoint before reporting it. json_mode is false for this model, matching Hubspoke; the floor exists because the model reasons before answering, so a 512-token budget would truncate every reply. Replay needs HUBSPOKE_BASE_URL_GPTOSS set to the same value.",
+  "cache": "results/model_cache.sqlite",
+  "workers": 8
+}
