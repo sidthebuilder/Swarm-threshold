@@ -68,11 +68,12 @@ Every statistic in the paper can be recomputed from that cache with no API key a
 access:
 
 ```powershell
-$env:SWARM_OFFLINE = "1"
-python -m swarm_threshold analyse results/runs_deepseek --output results/check_deepseek.json
-python -m swarm_threshold analyse results/runs_glm53   --output results/check_glm53.json
-python -m swarm_threshold analyse results/runs_qwen35  --output results/check_qwen35.json
+python -m swarm_threshold analyse results/runs_deepseek_combined.json --output results/check_deepseek.json
+python -m swarm_threshold analyse results/runs_glm53_combined.json   --output results/check_glm53.json
+python -m swarm_threshold analyse results/runs_qwen35_combined.json  --output results/check_qwen35.json
 ```
+
+(`analyse` takes one combined JSON file, not the run directory — that's what `results/runs_*_combined.json` is for. `--output` is diffable against `results/analysis_runs_*.json`, which is exactly what it was regenerated from.)
 
 Rebuild the figures and the PDF from scratch:
 
