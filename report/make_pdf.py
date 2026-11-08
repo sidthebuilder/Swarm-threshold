@@ -22,7 +22,7 @@ PREVIEW = ROOT / "report" / "_preview"
 PREVIEW.mkdir(exist_ok=True)
 
 PAGE = fitz.paper_rect("letter")
-MARGIN = (72, 58, -72, -58)
+MARGIN = (72, 42, -72, -42)
 FULL = PAGE + MARGIN
 TEXT_W = FULL.width
 
@@ -30,17 +30,17 @@ CSS = """
 @font-face {font-family: Body; src: url(OldStandard-Regular.ttf);}
 @font-face {font-family: Body; src: url(OldStandard-Bold.ttf); font-weight: bold;}
 @font-face {font-family: Body; src: url(OldStandard-Italic.ttf); font-style: italic;}
-body {margin: 0; font-family: Body; font-size: 10.3pt; line-height: 1.38; color: #111111;}
-p {margin-top: 0; margin-bottom: 7pt; text-align: justify;}
-h1 {font-weight: bold; font-size: 19pt; text-align: center; margin-top: 0; margin-bottom: 9pt;}
-h2 {font-weight: bold; font-size: 12.3pt; margin-top: 12pt; margin-bottom: 5pt;}
-h3 {font-weight: bold; font-style: italic; font-size: 10.5pt; margin-top: 8pt; margin-bottom: 3pt;}
+body {margin: 0; font-family: Body; font-size: 10.3pt; line-height: 1.21; color: #111111;}
+p {margin-top: 0; margin-bottom: 5pt; text-align: justify;}
+h1 {font-weight: bold; font-size: 19pt; text-align: center; margin-top: 0; margin-bottom: 8pt;}
+h2 {font-weight: bold; font-size: 12.3pt; margin-top: 9pt; margin-bottom: 4pt;}
+h3 {font-weight: bold; font-style: italic; font-size: 10.5pt; margin-top: 6pt; margin-bottom: 3pt;}
 p.center {text-align: center; margin-bottom: 3pt; margin-top: 0;}
 p.abstract {font-style: italic; font-size: 9.8pt; text-align: justify; margin-top: 3pt;}
-p.small {font-size: 8.8pt; line-height: 1.3; text-align: left;}
-li {margin-bottom: 4pt; text-align: left;}
-li.small {font-size: 8.8pt; line-height: 1.3; margin-bottom: 3pt;}
-table {width: 100%; border-collapse: collapse; font-size: 8.6pt; margin-top: 4pt; margin-bottom: 8pt;}
+p.small {font-size: 8.8pt; line-height: 1.25; text-align: left;}
+li {margin-bottom: 3pt; text-align: left;}
+li.small {font-size: 8.8pt; line-height: 1.25; margin-bottom: 2pt;}
+table {width: 100%; border-collapse: collapse; font-size: 8.6pt; margin-top: 3pt; margin-bottom: 6pt;}
 table.small {font-size: 7.7pt;}
 th {font-weight: bold; text-align: left; border-bottom: 1.2px solid #111; padding: 3px 5px;}
 td {text-align: left; border-bottom: 0.6px solid #ccc; padding: 3px 5px; vertical-align: top;}

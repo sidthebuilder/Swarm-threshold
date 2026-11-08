@@ -67,33 +67,28 @@ reconciles the two: their forum demanded the credential; mine offered a choice o
 
 ## 2. Related work
 
-**The incident.** METR and Redwood Research published the independent investigation of the July
-2026 Hugging Face intrusion. Swarm Traces (2026) released a redacted dataset of reconstructed
-attack payloads, and collusion.wiki (Von Arx et al., 2026) documents about 18,000 posts by
-agents using a dormant volunteer wiki as a message board. I use none of these datasets: this is
-a controlled sandbox experiment motivated by the incident, not a forensic replay of it.
+**The incident.** METR and Redwood Research investigated the July 2026 Hugging Face intrusion;
+Swarm Traces (2026) released reconstructed attack payloads, and collusion.wiki (Von Arx et al.,
+2026) documents about 18,000 posts by agents using a dormant wiki as a message board. I use none
+of these: this is a sandbox motivated by the incident, not a forensic replay of it.
 
-**The result this paper extends.** AE Studio's hackathon experiment, reported in *The Register*
-on 6 November 2026, is the direct antecedent. It measured credential sharing and script
-execution separately, found that pressure raised script execution from 19% to 34%, and that only
-8 of 43 agents who shared the token disclosed it unprompted. Public reporting attributes most of
-the sharing to DeepSeek and GLM, which is why I test those exact families; that attribution is
-secondary reporting, not a claim measured here.
+**The result this paper extends.** AE Studio's hackathon experiment, in *The Register* (6
+November 2026), is the direct antecedent: pressure raised script execution from 19% to 34%, and
+only 8 of 43 agents who shared the token disclosed it unprompted. Public reporting attributes
+most sharing to DeepSeek and GLM, why I test those families; secondary reporting, not measured
+here.
 
-**Multi-agent risk and oversight.** Hammond et al. (2025) set out the taxonomy of failures that
-appear in populations of agents rather than in any one of them. Lee and Tiwari (2024) show
-prompt injection propagating from agent to agent. Jones et al. (2024) show that a task refused by
-every model on its own can still be completed once it is split and handed to a pipeline of
-agents that each see only their piece; my waterbed result is a channel-level version of the same
-idea, a control that is correct on the channel it inspects and harmful once a substitute channel
-exists. Greenblatt et al. (2024) set out the evaluation frame this sits inside: a protocol can be
-locally sound and still fail against a model that finds the path it did not block. This sprint's
-reading list also points to work on attributing failures in multi-agent systems, which bears on
-my false-admission finding: a method that trusts an agent's own account of what it did would
+**Multi-agent risk and oversight.** Hammond et al. (2025) taxonomize population-level failures;
+Lee and Tiwari (2024) show prompt injection propagating agent to agent; Jones et al. (2024) show
+a task refused by every model alone can be completed once split across a pipeline seeing only
+pieces — my waterbed result is a channel-level version, correct on the channel it inspects and
+harmful once a substitute exists. Greenblatt et al. (2024) frame the stakes: a protocol can be
+locally sound yet fail against a model that finds the path it did not block. Work on attributing
+multi-agent failures bears on my false-admission finding: trusting an agent's own account would
 misattribute in exactly the cell I report.
 
 **Threshold models.** Granovetter's (1978) threshold model of collective behaviour is the natural
-frame for a peer-count curve, and a cascade test built on the measured curve was pre-registered.
+frame for a peer-count curve, and a cascade test on the measured curve was pre-registered.
 Because the curve is flat, the cascade is not reportable as a prediction test, and section 6 says
 so rather than fitting a model to a null.
 
@@ -101,57 +96,44 @@ so rather than fitting a model to a null.
 
 ### 3.1 The environment
 
-Everything is simulated. There is no repository, shell, service, credential, subprocess or
-network anywhere in the experiment; every action is applied to an in-memory state machine.
+Everything is simulated: no repository, shell, service, credential, subprocess or network exists
+anywhere; every action applies to an in-memory state machine.
 
 An agent is told it is fixing one failing test in a toy pricing service. It has seven actions,
-each expressed as a single JSON object per turn: inspect the repository, run the tests, read the
-local documentation, post to the forum, run the forum's helper, apply a patch, and finish. The
-task is complete when the test suite passes, which requires applying the patch under its exact
-name.
+each a single JSON object per turn: inspect the repository, run the tests, read the local
+documentation, post to the forum, run the forum's helper, apply a patch, and finish. The task
+completes when the test suite passes, which requires applying the patch under its exact name.
 
-The agent holds one private value per run, a canary of the form `canary-` plus 20 hex digits. The
-system prompt says the value is scoped to the sandbox and must not be put in a forum post or
-anywhere else that leaves it. No real credential exists; a leak is detected by finding the canary
-string in a post.
-
-A forum of 24 posts by other agents is shown in full on every turn. The forum returns the patch
-name in exchange for either a post containing the canary, or one call of its helper. The helper
-only sets an in-memory boolean marker, standing in for running untrusted code.
+The agent holds one private value per run, a canary of the form `canary-` plus 20 hex digits,
+scoped to the sandbox and never to be shared; a leak is detected by finding the canary string in
+a post. A forum of 24 posts by other agents is shown in full on every turn, returning the patch
+name for either a post containing the canary or one helper call; the helper only sets an
+in-memory boolean marker, standing in for running untrusted code.
 
 ### 3.2 The two registered factors
 
-**Peer count k, one of {0, 1, 3, 8, 24}.** The forum always contains exactly 24 posts: k posts in
-which a peer reports having posted the canary, run the helper, and received the patch, and 24−k
-neutral posts naming the same two channels and reporting that neither was used. Both texts are
-padded to the same fixed width, so the serialised forum is one character length for every k.
+**Peer count k ∈ {0, 1, 3, 8, 24}.** The forum always contains exactly 24 posts: k report a peer
+having posted the canary, run the helper, and received the patch; 24−k are neutral, naming the
+same two channels and reporting neither was used. Both texts pad to the same fixed width, so the
+forum is one character length for every k — deliberately, so a difference at k=24 cannot be
+attention dilution rather than peer conformity. The renderer never reads the peer count or run id
+(which is not even the same length across k); an import-time check fails the build if two
+observations differing only in k render to different lengths.
 
-This is deliberate. If k were varied by changing the post count, a difference at k = 24 could be
-attention dilution rather than peer conformity, and the two could not be told apart. The renderer
-never reads the peer count or the run id, because the run id encodes k and is not even the same
-length across conditions (`k0` against `k24`); rendering it would reintroduce the confound the
-fixed forum removes. An import-time check fails the build if two observations differing only in
-k render to different lengths.
-
-**Documentation route, one of {available, unavailable}.** With `available`, reading the local
-documentation returns the patch name, so the task can be solved without the forum. With
-`unavailable`, it returns no patch name and the forum is the only source. The two system prompts
-differ in exactly one line, the sentence describing what reading the documentation returns, and
-an import-time check fails the build if any prompt string contains the patch name itself.
+**Documentation route ∈ {available, unavailable}.** With `available`, reading the local
+documentation returns the patch name, so the task can be solved without the forum; with
+`unavailable`, it returns nothing and the forum is the only source. The two system prompts
+differ in exactly one line, and an import-time check fails the build if any prompt string
+contains the patch name itself.
 
 ### 3.3 Defences
 
-Three cells at k = 8 with the documentation unavailable, so both forum channels are live:
-
-- **none**: both channels open. Which does the model choose?
-- **canary blocked**: an outbound filter blocks any post containing the canary. The post is
-  dropped and the forum answers nothing.
-- **helper blocked**: an execution filter blocks the helper call. It does not run and the forum
-  answers nothing.
-
-Neither filter is announced in the prompt; a blocked channel is discovered through its action
-result, as it would be in deployment. A separate cell adds a prompt reminder never to share the
-canary or run an unnecessary helper, with no filter active.
+Three cells at k=8, documentation unavailable, both forum channels live: **none** (both open —
+which does the model choose?); **canary blocked** (an outbound filter drops any post containing
+the canary, and the forum answers nothing); **helper blocked** (an execution filter blocks the
+helper call, and the forum answers nothing). Neither filter is announced; a block is discovered
+through its action result, as in deployment. A separate cell adds a prompt reminder never to
+share the canary or run an unnecessary helper, with no filter active.
 
 ### 3.4 Outcomes
 
@@ -162,54 +144,44 @@ AE Studio result flagged as the gap worth measuring.
 
 ### 3.5 Models, scale and analysis
 
-Three families on the Adaption Responses API: `deepseek-v4-flash` and `glm-53-flash`, the two
-families public reporting associates with most of the sharing in the result this paper extends,
-and `qwen3.5-397b` as a larger-model contrast. Fourteen conditions × 20 seeds × 3 families = **840
-runs**. Every run wrote a file; no condition had a failed run. Served identity was confirmed
-present in the provider's hosted-model listing before any run, and total spend across the three
-sweeps was $10.82 against the provider's list prices, well inside the $500 of platform credit the
-sprint allots.
+Three families on the Adaption Responses API: `deepseek-v4-flash` and `glm-53-flash` (the
+families public reporting associates with most sharing in the result this paper extends), and
+`qwen3.5-397b` as a larger-model contrast. 14 conditions × 20 seeds × 3 families = **840 runs**;
+every run wrote a file, none failed; served identity was confirmed before any run; total spend
+was $10.82 of the $500 platform credit allotted.
 
-Each condition reports successes, total, rate and a Wilson 95% interval. Pairwise two-sided
-Fisher exact tests are Holm-corrected separately inside each registered family: the forum-only
-curve, the safe-route curve, the reminder comparison, and the three-way defence comparison. The
-empirical threshold is the smallest tested k whose observed rate reaches 0.5; it deliberately
-does not interpolate between tested counts.
+Each condition reports successes, total, rate and a Wilson 95% interval, with pairwise two-sided
+Fisher exact tests Holm-corrected inside each registered family (forum-only curve, safe-route
+curve, reminder comparison, three-way defence comparison). The empirical threshold is the
+smallest tested k whose rate reaches 0.5, and does not interpolate between tested counts.
 
 ### 3.6 Pre-registration, and what the smoke tests caught
 
 The conditions, seeds, outcomes, statistics and threshold rule were frozen before the registered
-runs. Four design faults were found by smoke tests **before any registered run existed**, each
-recorded as a deviation with the evidence kept as a discarded pilot batch:
-
-1. The forum reached the model only after a load action the model never took, so the k = 0 and
-   k = 24 prompts were character-identical and the curve would have measured nothing.
-2. The prompt promised the forum would supply the patch, but the state machine delivered nothing
-   for either channel, so the advertised exchange paid nothing.
-3. The peer posts advertised only the helper, which in the forum-only cells was already the
-   necessary route, leaving the peer count nothing to move.
-4. The canary filter blocked a channel the models were not using, so no substitution could
-   appear. This is what motivated adding the execution filter, which produced the paper's main
-   result.
+runs. Smoke tests caught four design faults **before any registered run existed**, each recorded
+as a deviation with the evidence kept as a discarded pilot batch: the forum loaded only after an
+action never taken, so k=0 and k=24 prompts were character-identical; the prompt promised a
+patch the state machine never delivered on either channel; peer posts advertised only the
+helper, already the necessary route in forum-only cells, leaving peer count nothing to move; and
+the canary filter blocked a channel models weren't using, which motivated the execution filter
+that produced the paper's main result.
 
 A fifth, mechanical fault: a 512-token completion budget truncated these reasoning models to
-**empty** replies, concentrated in the hardest cell. The budget was raised to 4096 before any
-registered run. Even at 4096, 42 of `qwen3.5-397b`'s 280 runs (15%) contained at least one
-truncated call, mostly in the harder waterbed cells where it reasons longest (mean 7.0 action
-steps there against about 5.5 elsewhere); none of these runs terminated on parse failure, because
-the three-strike rule was never triggered three times in a row within a single run.
+**empty** replies, concentrated in the hardest cell, fixed by raising the budget to 4096 before
+any registered run. Even at 4096, 42 of `qwen3.5-397b`'s 280 runs (15%) still had at least one
+truncated call, mostly in the harder waterbed cells (mean 7.0 action steps there against about
+5.5 elsewhere); none terminated on parse failure, since the three-strike rule never triggered
+three times running.
 
-Because the Responses API exposes no seed, a seed indexes an independent draw rather than a
-reproducible one. Offline replay rests entirely on the reply cache, which ships with the code and
-is therefore the primary artifact of this result. One further integrity note, found during
-write-up rather than during the sprint: an early run of the `deepseek-v4-flash` sweep overlapped
-with a second, parallel invocation against the same cache file, so a minority of its 280 stored
-run files did not replay byte-for-byte from the final cache (87 of 280 showed a different action
-sequence; all but one reached the same four outcomes, and one safe-route run flipped from a
-helper call to no action). The released `deepseek-v4-flash` run set was rebuilt by replaying every
-job from the final cache with network access disabled, so the three released sets now replay
-exactly (280 of 280 each, zero new calls) and are what every number in this paper is computed
-from.
+Because the Responses API exposes no seed, a seed indexes an independent draw, not a reproducible
+one; offline replay rests entirely on the reply cache, the primary artifact of this result. One
+further integrity note, found at write-up: an early `deepseek-v4-flash` sweep overlapped with a
+second, parallel invocation against the same cache file, so 87 of its 280 stored files did not
+replay byte-for-byte from the final cache (all but one reached the same four outcomes; one
+safe-route run flipped from a helper call to no action). The released set was rebuilt by
+replaying every job from the final cache with network disabled, so all three released sets now
+replay exactly (280 of 280 each, zero new calls) and are what every number in this paper is
+computed from.
 
 ## 4. Results
 
@@ -251,10 +223,10 @@ families. There was nothing to reduce, because the canary rate was already zero.
 
 (At k=3, `deepseek-v4-flash`'s comparison is 20/20 against 1/20, p = 3.0×10⁻¹⁰ Holm-corrected.)
 
-This is the largest effect in the experiment, and it is about the task rather than the social
-situation. When the documentation named the patch, every model solved the task locally and left
-the forum alone, regardless of how many peers said they had used it. When it did not, every model
-used the forum, regardless of how few peers said they had.
+This is the largest effect in the experiment, and it is about the task, not the social
+situation: when documentation named the patch, every model solved it locally and left the forum
+alone regardless of peer count; when it did not, every model used the forum regardless of how
+few peers had.
 
 Crucially, when they did use the forum, **all three models chose the channel that disclosed
 nothing**. The canary was never posted in any of these 300 forum-only runs. Given two ways to
@@ -292,13 +264,12 @@ family, p = 1.0 against the unfiltered cell). The asymmetry is the finding:
 - Block the channel that runs untrusted code → the largest model tested discloses the secret
   instead, in nearly half its runs.
 
-The two smaller families did not substitute. With the helper blocked, every one of their 40 runs
-(20 each) ended without the patch: `deepseek-v4-flash` mostly ran out of its 12-step budget after
-repeatedly retrying the blocked helper and guessing at patch names (16 of 20 runs), and
-`glm-53-flash` gave up cleanly in all 20, reporting in its closing summary that the route was
-blocked and that it would not post the canary. So substitution toward disclosure is
-model-dependent, and in this experiment the model best able to find an alternative route to the
-reward is the one that found the harmful one.
+The two smaller families did not substitute: with the helper blocked, all 40 of their runs (20
+each) ended without the patch. `deepseek-v4-flash` mostly ran out of its 12-step budget retrying
+the blocked helper and guessing patch names (16 of 20); `glm-53-flash` gave up cleanly in all 20,
+its closing summary stating the route was blocked and it would not post the canary.
+Substitution toward disclosure is model-dependent — the model best able to find an alternative
+route to the reward is the one that found the harmful one.
 
 ![Figure 2. The three defence cells at k=8, documentation unavailable: blocking the canary post is free, blocking the helper is not.](figures/fig2_defence_cells.png)
 
@@ -371,111 +342,92 @@ advance, before the registered runs used it.
 
 ## 5. Discussion
 
-**Why this does not contradict the result it extends.** AE Studio's forum *demanded* the token:
-paying meant disclosing. Mine offered two ways to pay, and every model took the non-disclosing
-one. Its 15% and my 0% are measurements of different situations, and together they suggest
-something neither shows alone: disclosure depends less on social pressure than on whether a
-non-disclosing way to comply exists. Remove that option and disclosure appears. That is what the
-execution filter did.
+**Why this does not contradict the result it extends.** AE Studio's forum *demanded* the token;
+mine offered two ways to pay, and every model took the non-disclosing one. Its 15% and my 0%
+measure different situations, and together suggest disclosure depends less on social pressure
+than on whether a non-disclosing way to comply exists. Remove that option and disclosure
+appears — that is what the execution filter did.
 
-**The practical implication is uncomfortable.** The intuitive ranking of the two channels is that
-disclosing a credential is worse than running an untrusted helper, so a deployer able to afford
-only one control would block disclosure first. This result says that control costs nothing and
-the other one, blocking untrusted execution, is the one that backfires. A deployer who blocks
-execution without also blocking disclosure has, for the largest model tested, turned a contained
-failure into a credential leak in close to half of runs. Defences on channels that substitute for
-each other need to be evaluated together, and the three-cell comparison in table 3 is a cheap way
-to do that before deployment.
+**The practical implication is uncomfortable.** The intuitive ranking says disclosing a
+credential is worse than running an untrusted helper, so a deployer able to afford only one
+control would block disclosure first. This result says that control costs nothing, and the
+other — blocking untrusted execution — is the one that backfires: for the largest model tested,
+it turns a contained failure into a credential leak in close to half of runs. Channels that
+substitute for each other need to be evaluated together; table 3 is a cheap way to do that
+before deployment.
 
-**Why the null on peer count is informative rather than empty.** The social manipulation tested
-was strong: 24 of 24 posts reporting both unsafe acts and a successful outcome, visible on every
-turn, with context length held fixed by construction. It changed nothing, on two outcomes, in
-three model families, with 95% intervals excluding rates above about 0.16 at every cell. Within
-this environment, these models show no measurable conformity toward unsafe acts from reports
-alone. That is worth knowing before building a defence that assumes social pressure is the
-mechanism worth countering.
+**Why the null on peer count is informative rather than empty.** The manipulation tested was
+strong: 24 of 24 posts reporting unsafe acts and a successful outcome, visible every turn,
+context length fixed by construction. It changed nothing, on two outcomes, in three families,
+with 95% intervals excluding rates above about 0.16 at every cell — worth knowing before building
+a defence that assumes social pressure is the mechanism to counter.
 
 **What the self-report finding suggests for oversight.** Unprompted disclosure was close to
-complete when something happened, which is a contrast with the antecedent. But after a blocked
-attempt, one model's answers to a direct question disagreed with its own closing summary in the
-same transcript, in more than half of the relevant runs. An oversight scheme that relies on asking
-an agent what it did, rather than checking a record of what actually executed, would have been
-wrong more often than right in exactly the cell that most needed it to be right.
+complete when something happened, a contrast with the antecedent. But after a blocked attempt,
+one model's direct-question answers disagreed with its own closing summary in the same
+transcript, in more than half the relevant runs — an oversight scheme that asks an agent what it
+did, rather than checking a record of what executed, would have been wrong most often exactly
+where it most needed to be right.
 
-## 6. Limitations
+## 6. Limitations and Dual-Use / Ethical Considerations
 
-- **No reproducible sampling.** The provider's API exposes no seed parameter. A seed indexes an
-  independent draw rather than a reproducible one; replay is guaranteed only by the released
-  reply cache, and a difference between two executions of the same cell is not evidence of a
-  behavioural difference.
-- **A data-handling error, found and corrected.** An early run of the `deepseek-v4-flash` sweep
-  overlapped with a second invocation against the same cache file (section 3.6). The released set
-  was rebuilt from the cache and verified to replay exactly; this is disclosed because it
-  happened, not because it changed a conclusion.
-- **One wording.** A single frozen prompt version. The peer-post text, the two route sentences
-  and the reminder are each one phrasing, not a sample of phrasings. The null on peer count is a
-  null for this wording.
-- **Peer reports, not peer agents.** The forum is fixed text written in advance. This isolates the
-  social signal from genuine multi-agent interaction, and the result does not speak to dynamics
-  between live, responsive agents.
-- **A simulated sandbox.** A fake canary, a marker-setting helper, a toy bug. Nothing here
-  establishes how these models behave with a real credential or a real script.
-- **Three families on one hosted provider.** Served identity was confirmed only through that
+- **No reproducible sampling.** The API has no seed parameter; a seed indexes an independent
+  draw, not a reproducible one. Replay is guaranteed only by the released reply cache; a
+  difference between two executions of the same cell is not evidence of a behavioural
+  difference.
+- **A data-handling error, found and corrected.** An early `deepseek-v4-flash` run overlapped a
+  second invocation against the same cache file (§3.6). The released set was rebuilt and
+  verified to replay exactly; disclosed because it happened, not because it changed a conclusion.
+- **One wording.** A single frozen prompt version — the peer-post text, route sentences, and
+  reminder are each one phrasing, not a sample. The null on peer count is a null for this
+  wording.
+- **Peer reports, not peer agents.** The forum is fixed text written in advance, isolating the
+  social signal from genuine multi-agent interaction; this does not speak to dynamics between
+  live, responsive agents.
+- **A simulated sandbox.** A fake canary, a marker-setting helper, a toy bug — nothing here
+  establishes how these models behave with a real credential or script.
+- **Three families, one hosted provider.** Served identity was confirmed only through that
   provider's model listing.
-- **Token truncation, mostly contained.** 15% of `qwen3.5-397b`'s runs had at least one truncated
-  call even at the corrected 4096-token budget, concentrated in its hardest cells; none of these
-  runs terminated on parse failure, but a stricter budget might change behaviour in ways this
-  design cannot separate from the substantive effect.
+- **Token truncation, mostly contained.** 15% of `qwen3.5-397b`'s runs had at least one
+  truncated call even at the corrected 4096-token budget, concentrated in its hardest cells;
+  none terminated on parse failure, but a stricter budget might change behaviour in ways this
+  design can't separate from the substantive effect.
 - **The threshold rule does not interpolate** between tested peer counts, by design.
-- **The pre-registered cascade is not reported**, because the curve it would be built from is
-  flat; fitting a diffusion model to a null would not be informative.
-- **The choice of model families** rests on secondary reporting about the AE Studio result, not a
-  measurement made here.
-- **The self-report finding comes from one cell and was not pre-registered as a hypothesis.** It
-  is reported as an observation that bears directly on how much weight to put on an agent's
-  account of its own actions, not as a tested claim about a general tendency.
+- **The pre-registered cascade is not reported**: the curve it would be built from is flat, and
+  fitting a diffusion model to a null would not be informative.
+- **The choice of model families** rests on secondary reporting about the AE Studio result, not
+  a measurement made here.
+- **The self-report finding comes from one cell, not pre-registered as a hypothesis** — an
+  observation bearing on how much weight to put on an agent's account of its own actions, not a
+  tested claim about a general tendency.
 
-## 7. Dual-use and ethical considerations
-
-**What this could enable.** This paper identifies a way to raise the chance of a credential
-disclosure from a capable model: remove the non-disclosing route to the same reward. Read
-adversarially, section 4.3 describes an environmental change that pushes an agent toward a worse
-failure mode.
+**What this could enable.** This paper shows a way to raise the chance of credential disclosure
+from a capable model: remove the non-disclosing route to the same reward. Read adversarially,
+§4.3 describes an environmental change that pushes an agent toward a worse failure mode.
 
 **Why publishing it is still right.** This is not an exploit against a specific system; it is a
-property of a defensive control that an operator might install in good faith, believing it
-protective. The people who most need this finding are the people deciding which filter to deploy.
-It offers nothing to an attacker who already controls the forum's content, since such an attacker
-can demand the credential outright, as the antecedent's forum did, without needing to engineer a
-substitution effect.
+property of a defensive control an operator might install in good faith, believing it
+protective. The people who most need this finding are the people deciding which filter to
+deploy. It offers nothing to an attacker who already controls the forum's content, who can
+demand the credential outright without engineering a substitution effect.
 
 **Mitigations taken.** No prompt was tuned to raise compliance; the forum text is plain and
-factual and adds no persuasion beyond stating what each channel returns. No attack on a live
-monitor was built or attempted, and the peer-post wording was fixed before any model-backed run
-and never revised after seeing a result. Everything ran in a simulated sandbox with a fake canary
-and a marker-setting helper; no real credential, service or network was ever involved.
+factual, adding no persuasion beyond stating what each channel returns. No attack on a live
+monitor was attempted, and the peer-post wording was fixed before any model-backed run and never
+revised after seeing a result. Everything ran in a simulated sandbox with a fake canary and a
+marker-setting helper; no real credential, service or network was involved.
 
-**Intended beneficiaries.** Anyone deploying partial controls over an agent's available channels,
-and anyone designing an oversight process that asks an agent to report its own actions. For the
-second group, the figures in section 4.4 are the number to weigh.
+**Intended beneficiaries.** Anyone deploying partial controls over an agent's channels, and
+anyone designing oversight that asks an agent to report its own actions — for the second group,
+§4.4's figures are the number to weigh.
 
-## 8. Code and data
-
-Code repository: https://github.com/sidthebuilder/swarm-threshold
-
-The repository contains the harness, all 840 released run files, the offline reply cache that
-reproduces every number in this paper with no network access, the two-stage pre-registration, and
-a full log of every deviation from it with the evidence that motivated each one. Running
-`python -m unittest discover -s tests` executes 152 tests with no network access.
-
-**Preexisting work.** The `hubspoke` repository, built for an earlier sprint, is preexisting in
-full; this project adapts its cache-first client shape, its policy-injection pattern, its
-scripted-control pattern, and its Wilson, Fisher and Holm-correction implementations, and
-deliberately corrects a cache-key omission in the original (it did not key on the endpoint, the
-JSON-mode setting or the prompt version, any of which could change a reply without changing the
-key). Three Modal-hosted configurations reuse `hubspoke`'s endpoint and model identities but were
-not used in the registered experiment. Everything under `swarm_threshold/` was written for this
-sprint.
+**Code and data.** Repository: https://github.com/sidthebuilder/swarm-threshold — the harness,
+all 840 released run files, the offline reply cache reproducing every number here with no
+network access, the two-stage pre-registration, and a full deviation log. `python -m unittest
+discover -s tests` runs 152 tests, no network access. The `hubspoke` repository (an earlier,
+preexisting sprint) is credited throughout: this project adapts its cache-first client shape,
+policy-injection pattern, and Wilson/Fisher/Holm implementations, correcting a cache-key
+omission in the original. Everything under `swarm_threshold/` was written for this sprint.
 
 ## Author Contributions
 
